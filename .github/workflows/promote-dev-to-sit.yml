@@ -5,8 +5,8 @@ on:
     branches: [dev]
 
 permissions:
-  contents: write        # Allows the action to write to repository contents (e.g., create a PR)
-  pull-requests: write   # Allows the action to create and modify pull requests
+  contents: write
+  pull-requests: write
 
 jobs:
   promote:
@@ -19,19 +19,22 @@ jobs:
       - name: Checkout dev branch
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Important for full history and refs
+          fetch-depth: 0
 
       - name: Set up Git identity
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Debug: Print Repository Context
+        run: echo "github.repository: ${{ github.repository }}"
+
       - name: Create PR from dev to sit
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          owner: ${{ github.repository_owner }} # Explicitly get the owner
-          repo: ${{ github.event.repository.name }} # Explicitly get the repository name
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
           commit-message: Promote from dev to sit
           title: Promote dev to sit
           body: Auto promotion from dev to sit
