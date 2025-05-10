@@ -1,0 +1,19 @@
+name: Promote Dev to SIT
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create PR to SIT
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Promote from dev to sit
+          title: Promote dev to sit
+          body: Auto promotion from dev to sit
+          base: sit
+          branch: dev
