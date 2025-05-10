@@ -1,0 +1,35 @@
+name: Auto PR from SIT to Main
+
+on:
+  push:
+    branches: [sit]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout SIT
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create PR to Main
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          source_branch: sit
+          base_branch: main
+          commit-message: "Auto PR from SIT to Main"
+          title: "Promote SIT to Main"
+          body: "Automatically creating a pull request from SIT to Main."
