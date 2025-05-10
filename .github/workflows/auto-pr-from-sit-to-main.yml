@@ -27,7 +27,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
+          repo:  ${{ github.repository }}
           source_branch: sit
           base_branch: main
           commit-message: "Auto PR from SIT to Main"
