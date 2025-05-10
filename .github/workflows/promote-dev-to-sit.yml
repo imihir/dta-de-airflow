@@ -4,6 +4,10 @@ on:
   push:
     branches: [dev]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   promote:
     runs-on: ubuntu-latest
@@ -26,6 +30,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
           commit-message: Promote from dev to sit
           title: Promote dev to sit
           body: Auto promotion from dev to sit
