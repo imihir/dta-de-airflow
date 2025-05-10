@@ -26,9 +26,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Debug: Print Repository Context
+      - name: Print Repository Context
         run: echo "github.repository: ${{ github.repository }}"
-
+        
       - name: Create PR from dev to sit
         uses: peter-evans/create-pull-request@v5
         with:
