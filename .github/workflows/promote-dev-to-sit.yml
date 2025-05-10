@@ -11,9 +11,6 @@ permissions:
 jobs:
   promote:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout dev branch
@@ -33,8 +30,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
+          repository: ${{ github.repository }}
           commit-message: Promote from dev to sit
           title: Promote dev to sit
           body: Auto promotion from dev to sit
