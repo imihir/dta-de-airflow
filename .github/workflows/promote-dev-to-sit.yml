@@ -5,8 +5,8 @@ on:
     branches: [dev]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write        # Allows the action to write to repository contents (e.g., create a PR)
+  pull-requests: write   # Allows the action to create and modify pull requests
 
 jobs:
   promote:
@@ -30,7 +30,8 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
+          owner: ${{ github.repository_owner }} # Explicitly get the owner
+          repo: ${{ github.event.repository.name }} # Explicitly get the repository name
           commit-message: Promote from dev to sit
           title: Promote dev to sit
           body: Auto promotion from dev to sit
