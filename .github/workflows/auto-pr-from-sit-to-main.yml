@@ -1,17 +1,51 @@
-name: Auto PR from SIT to Main
+name: Auto PRs from Dev and SIT
 
 on:
   push:
-    branches: [sit]
+    branches:
+      - sit
+      - dev
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  create-pr:
+  pr-from-dev-to-sit:
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Dev branch
+        uses: actions/checkout@v3
 
+      - name: Set up Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh -y
+
+      - name: Create PR from Dev to SIT
+        run: |
+          existing_pr=$(gh pr list --base sit --head dev --json number --jq '.[0].number')
+
+          if [ -z "$existing_pr" ]; then
+            echo "No existing PR found. Creating a new one..."
+            gh pr create \
+              --title "Promote Dev to SIT" \
+              --body "Automatically creating a pull request from Dev to SIT." \
+              --base sit \
+              --head dev
+          else
+            echo "PR from dev to sit already exists: #$existing_pr"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.CICD_TOKEN }}
+
+  pr-from-sit-to-main:
+    if: github.ref == 'refs/heads/sit'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout SIT branch
         uses: actions/checkout@v3
@@ -26,7 +60,6 @@ jobs:
 
       - name: Create PR from SIT to Main
         run: |
-          # Check if a PR from sit to main already exists
           existing_pr=$(gh pr list --base main --head sit --json number --jq '.[0].number')
 
           if [ -z "$existing_pr" ]; then
