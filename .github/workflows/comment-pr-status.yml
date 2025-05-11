@@ -1,0 +1,56 @@
+name: Comment PR Status
+
+on:
+  workflow_run:
+    workflows: ["Auto PRs from Dev and SIT"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  comment-on-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh -y
+
+      - name: Comment PR status
+        run: |
+          dev_to_sit=$(gh pr list --base sit --head dev --state open --json number --jq '.[0].number')
+          sit_to_main=$(gh pr list --base main --head sit --state open --json number --jq '.[0].number')
+
+          dev_status="❌"
+          sit_status="❌"
+
+          if [ -n "$dev_to_sit" ]; then
+            dev_status="✅"
+          fi
+
+          if [ -n "$sit_to_main" ]; then
+            sit_status="✅"
+          fi
+
+          comment_body="### 🔄 Current Promotion Status\n\n| Stage        | Source ➝ Target | PR Open |\n|--------------|------------------|---------|\n| Dev ➝ SIT    | dev ➝ sit        | $dev_status |\n| SIT ➝ Main   | sit ➝ main       | $sit_status |\n\n*Updated automatically by GitHub Actions.*"
+
+          # If there's a PR from dev to sit, comment on it
+          if [ -n "$dev_to_sit" ]; then
+            gh pr comment "$dev_to_sit" --body "$comment_body"
+          fi
+
+          # Also comment on the sit to main PR if it exists
+          if [ -n "$sit_to_main" ]; then
+            gh pr comment "$sit_to_main" --body "$comment_body"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.CICD_TOKEN }}
