@@ -26,7 +26,18 @@ jobs:
 
       - name: Create PR from SIT to Main
         run: |
-          # Check if PR already exists
+          # Check if a PR from sit to main already exists
           existing_pr=$(gh pr list --base main --head sit --json number --jq '.[0].number')
-          
-          if [ -z "$existing_pr"_]()
+
+          if [ -z "$existing_pr" ]; then
+            echo "No existing PR found. Creating a new one..."
+            gh pr create \
+              --title "Promote SIT to Main" \
+              --body "Automatically creating a pull request from SIT to Main." \
+              --base main \
+              --head sit
+          else
+            echo "PR from sit to main already exists: #$existing_pr"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.CICD_TOKEN }}
