@@ -2,7 +2,7 @@ name: Update README with PR Status
 
 on:
   workflow_run:
-    workflows: ["Auto PRs from Dev and SIT"]  # Trigger when the first workflow completes
+    workflows: ["Auto PRs from Dev and SIT"]
     types:
       - completed
 
@@ -23,15 +23,12 @@ jobs:
 
       - name: Update README with PR status
         run: |
-          # Check if PR exists from dev to sit
           dev_to_sit=$(gh pr list --base sit --head dev --state open --json number --jq '.[0].number')
           sit_to_main=$(gh pr list --base main --head sit --state open --json number --jq '.[0].number')
 
-          # Set default statuses as ❌ (not found)
           dev_status="❌"
           sit_status="❌"
 
-          # If PRs exist, update status to ✅
           if [ -n "$dev_to_sit" ]; then
             dev_status="✅"
           fi
@@ -40,16 +37,12 @@ jobs:
             sit_status="✅"
           fi
 
-          # Update the README.md file with PR status
-          sed -i '/<!-- PR-STATUS-START -->/,/<!-- PR-STATUS-END -->/c\
-<!-- PR-STATUS-START -->\n\
-| Stage | Source Branch | Target Branch | Open PR |\n\
-|-------|----------------|----------------|---------|\n\
-| Dev ➝ SIT | dev | sit | '"$dev_status"' |\n\
-| SIT ➝ Main | sit | main | '"$sit_status"' |\n\
-<!-- PR-STATUS-END -->' README.md
+          # Use printf to generate the replacement content safely
+          new_status=$(printf "<!-- PR-STATUS-START -->\n| Stage | Source Branch | Target Branch | Open PR |\n|-------|----------------|----------------|---------|\n| Dev ➝ SIT | dev | sit | %s |\n| SIT ➝ Main | sit | main | %s |\n<!-- PR-STATUS-END -->" "$dev_status" "$sit_status")
 
-          # Commit and push the changes if README.md was updated
+          # Replace the section in README.md
+          sed -i "/<!-- PR-STATUS-START -->/,/<!-- PR-STATUS-END -->/c$new_status" README.md
+
           if [[ $(git status --porcelain) ]]; then
             git add README.md
             git commit -m "Update PR status in README"
