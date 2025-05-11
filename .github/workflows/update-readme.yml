@@ -6,6 +6,10 @@ on:
     types:
       - completed
 
+permissions:
+  contents: write
+  pull-requests: read
+
 jobs:
   update-readme:
     runs-on: ubuntu-latest
@@ -23,9 +27,11 @@ jobs:
 
       - name: Update README with PR status
         run: |
+          # Get open PR numbers if they exist
           dev_to_sit=$(gh pr list --base sit --head dev --state open --json number --jq '.[0].number')
           sit_to_main=$(gh pr list --base main --head sit --state open --json number --jq '.[0].number')
 
+          # Default status
           dev_status="❌"
           sit_status="❌"
 
@@ -37,16 +43,31 @@ jobs:
             sit_status="✅"
           fi
 
-          # Use printf to generate the replacement content safely
-          new_status=$(printf "<!-- PR-STATUS-START -->\n| Stage | Source Branch | Target Branch | Open PR |\n|-------|----------------|----------------|---------|\n| Dev ➝ SIT | dev | sit | %s |\n| SIT ➝ Main | sit | main | %s |\n<!-- PR-STATUS-END -->" "$dev_status" "$sit_status")
+          # Create new status block
+          cat <<EOF > status_table.md
+          <!-- PR-STATUS-START -->
+          | Stage        | Source Branch | Target Branch | Open PR |
+          |--------------|----------------|----------------|---------|
+          | Dev ➝ SIT    | dev            | sit            | $dev_status |
+          | SIT ➝ Main   | sit            | main           | $sit_status |
+          <!-- PR-STATUS-END -->
+          EOF
 
-          # Replace the section in README.md
-          sed -i "/<!-- PR-STATUS-START -->/,/<!-- PR-STATUS-END -->/c$new_status" README.md
+          # Replace section between markers
+          awk '
+            BEGIN {in_block=0}
+            /<!-- PR-STATUS-START -->/ {print; system("cat status_table.md"); in_block=1; next}
+            /<!-- PR-STATUS-END -->/ {in_block=0; next}
+            !in_block {print}
+          ' README.md > README.tmp && mv README.tmp README.md
 
+          # Commit and push if there are changes
           if [[ $(git status --porcelain) ]]; then
             git add README.md
             git commit -m "Update PR status in README"
             git push
+          else
+            echo "No changes to commit."
           fi
         env:
           GH_TOKEN: ${{ secrets.CICD_TOKEN }}
