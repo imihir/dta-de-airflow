@@ -1,0 +1,68 @@
+name: Verify PR Flow
+
+on:
+  workflow_dispatch:  # Manual trigger for testing
+  push:
+    branches:
+      - dev
+      - sit
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+    outputs:
+      pr_found: ${{ steps.check-pr.outputs.found }}
+    steps:
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh -y
+
+      - name: Check PR from dev to sit
+        id: check-pr
+        run: |
+          pr_number=$(gh pr list --base sit --head dev --state open --json number --jq '.[0].number')
+          if [ -n "$pr_number" ]; then
+            echo "PR from dev to sit exists: #$pr_number"
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "No PR from dev to sit found. Halting here."
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sit:
+    runs-on: ubuntu-latest
+    needs: verify-dev
+    if: needs.verify-dev.outputs.pr_found == 'true'
+    outputs:
+      pr_found: ${{ steps.check-pr.outputs.found }}
+    steps:
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh -y
+
+      - name: Check PR from sit to main
+        id: check-pr
+        run: |
+          pr_number=$(gh pr list --base main --head sit --state open --json number --jq '.[0].number')
+          if [ -n "$pr_number" ]; then
+            echo "PR from sit to main exists: #$pr_number"
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "No PR from sit to main found. Halting here."
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  prod:
+    runs-on: ubuntu-latest
+    needs: verify-sit
+    if: needs.verify-sit.outputs.pr_found == 'true'
+    steps:
+      - name: Placeholder for Prod Verification
+        run: echo "All PRs exist. Proceeding to production verification."
