@@ -33,7 +33,7 @@ jobs:
             echo "found=false" >> $GITHUB_OUTPUT
           fi
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CICD_TOKEN }}
 
   sit:
     runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
             echo "found=false" >> $GITHUB_OUTPUT
           fi
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CICD_TOKEN }}
 
   prod:
     runs-on: ubuntu-latest
