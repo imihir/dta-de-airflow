@@ -41,7 +41,7 @@ jobs:
   sit:
     runs-on: ubuntu-latest
     needs: dev
-    if: needs.verify-dev.outputs.pr_found == 'true'
+    if: needs.dev.outputs.pr_found == 'true'
     outputs:
       pr_found: ${{ steps.check-pr.outputs.found }}
     steps:
@@ -68,7 +68,7 @@ jobs:
   prod:
     runs-on: ubuntu-latest
     needs: sit
-    if: needs.verify-sit.outputs.pr_found == 'true'
+    if: needs.sit.outputs.pr_found == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
