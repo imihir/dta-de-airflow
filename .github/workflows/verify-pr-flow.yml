@@ -37,7 +37,7 @@ jobs:
 
   sit:
     runs-on: ubuntu-latest
-    needs: verify-dev
+    needs: dev
     if: needs.verify-dev.outputs.pr_found == 'true'
     outputs:
       pr_found: ${{ steps.check-pr.outputs.found }}
@@ -61,7 +61,7 @@ jobs:
 
   prod:
     runs-on: ubuntu-latest
-    needs: verify-sit
+    needs: sit
     if: needs.verify-sit.outputs.pr_found == 'true'
     steps:
       - name: Placeholder for Prod Verification
