@@ -1,7 +1,7 @@
 name: Verify PR Flow
 
 on:
-  workflow_dispatch:  # Manual trigger for testing
+  workflow_dispatch:
   push:
     branches:
       - dev
@@ -13,11 +13,14 @@ permissions:
   pull-requests: read
 
 jobs:
-  dev:
+  verify-dev:
     runs-on: ubuntu-latest
     outputs:
       pr_found: ${{ steps.check-pr.outputs.found }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Install GitHub CLI
         run: sudo apt-get install gh -y
 
@@ -33,15 +36,18 @@ jobs:
             echo "found=false" >> $GITHUB_OUTPUT
           fi
         env:
-          GH_TOKEN: ${{ secrets.CICD_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  sit:
+  verify-sit:
     runs-on: ubuntu-latest
-    needs: dev
+    needs: verify-dev
     if: needs.verify-dev.outputs.pr_found == 'true'
     outputs:
       pr_found: ${{ steps.check-pr.outputs.found }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Install GitHub CLI
         run: sudo apt-get install gh -y
 
@@ -59,10 +65,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CICD_TOKEN }}
 
-  prod:
+  verify-prod:
     runs-on: ubuntu-latest
-    needs: sit
+    needs: verify-sit
     if: needs.verify-sit.outputs.pr_found == 'true'
     steps:
-      - name: Placeholder for Prod Verification
-        run: echo "All PRs exist. Proceeding to production verification."
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh -y
+
+      - name: Confirm promotion to production
+        run: echo "All PRs in place. Ready for production promotion."
+        env:
+          GH_TOKEN: ${{ secrets.CICD_TOKEN }}
